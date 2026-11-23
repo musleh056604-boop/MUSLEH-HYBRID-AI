@@ -17,6 +17,9 @@ jobs:
       - uses: subosito/flutter-action@v2
         with:
           flutter-version: '3.47.7'
+      - name: Flutter dependencies
+        working-directory: app
+        run: flutter pub get
       - name: Build bundled arm64 runtime
         run: bash runtime/build-runtime.sh arm64-v8a
       - name: Build arm64 APK without companion pack
