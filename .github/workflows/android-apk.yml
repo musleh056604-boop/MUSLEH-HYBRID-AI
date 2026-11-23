@@ -27,9 +27,9 @@ jobs:
       - name: Skip optional tawcroot failure
         run: |
           sed -i 's/  \[\[ \$mode == release \]\] && die "tawcroot: libtawcroot.so did not build"/  echo "tawcroot unavailable; continuing"/' tooling/build-apk.sh
-      - name: Build arm64 APK
-        run: bash tooling/build-apk.sh --build-name 1.0.0 --no-companion
+      - name: Build side arm64 APK
+        run: bash tooling/build-apk.sh --build-name 1.0.0 --no-companion --side
       - uses: actions/upload-artifact@v4
         with:
-          name: musleh-arm64-runtime-apk
+          name: musleh-arm64-side-runtime-apk
           path: app/build/app/outputs/**/*.apk
