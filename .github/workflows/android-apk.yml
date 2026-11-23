@@ -1,0 +1,26 @@
+name: Android APK
+on:
+  workflow_dispatch:
+  push:
+    branches: [musleh-v1-core]
+permissions:
+  contents: read
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.47.7'
+      - run: cd app && flutter pub get
+      - run: cd app && flutter analyze
+      - run: flutter build apk --release --target-platform android-arm64
+      - uses: actions/upload-artifact@v4
+        with:
+          name: musleh-arm64-apk
+          path: app/build/app/outputs/**/*.apk
