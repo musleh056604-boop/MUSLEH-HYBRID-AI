@@ -1,0 +1,37 @@
+name: llama-server-arm64
+on:
+  workflow_dispatch:
+    inputs:
+      llama_tag:
+        description: "llama.cpp release tag to pin"
+        required: true
+        type: string
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - name: Clone llama.cpp
+        run: git clone --depth 1 --branch "${{ inputs.llama_tag }}" https://github.com/ggml-org/llama.cpp src
+      - name: Locate NDK
+        run: |
+          NDK="${ANDROID_NDK_LATEST_HOME:-}"
+          if [ -z "$NDK" ] || [ ! -d "$NDK" ]; then NDK="$(ls -d "${ANDROID_SDK_ROOT:-/usr/local/lib/android/sdk}"/ndk/* 2>/dev/null | sort -V | tail -1)"; fi
+          test -d "$NDK" || { echo "NDK not found"; exit 1; }
+          echo "NDK=$NDK" >> "$GITHUB_ENV"
+      - name: Configure Android arm64 baseline
+        run: |
+          cmake -S src -B build -DCMAKE_TOOLCHAIN_FILE="$NDK/build/cmake/android.toolchain.cmake" -DANDROID_ABI=arm64-v8a -DANDROID_PLATFORM=android-29 -DANDROID_STL=c++_static -DCMAKE_BUILD_TYPE=Release -DCMAKE_C_FLAGS="-march=armv8-a" -DCMAKE_CXX_FLAGS="-march=armv8-a" -DGGML_NATIVE=OFF -DGGML_OPENMP=OFF -DGGML_LLAMAFILE=OFF -DLLAMA_CURL=OFF -DBUILD_SHARED_LIBS=OFF
+      - name: Build
+        run: cmake --build build --target llama-server -j4
+      - name: Package and verify
+        run: |
+          cp build/bin/llama-server libllama_server.so
+          "$NDK/toolchains/llvm/prebuilt/linux-x86_64/bin/llvm-strip" libllama_server.so
+          readelf -h libllama_server.so | grep -q AArch64
+          readelf -l libllama_server.so | grep -q linker64
+          sha256sum libllama_server.so
+      - uses: actions/upload-artifact@v4
+        with:
+          name: llama-server-arm64
+          path: libllama_server.so
