@@ -17,9 +17,15 @@ jobs:
       - uses: subosito/flutter-action@v2
         with:
           flutter-version: '3.47.7'
-      - run: cd app && flutter pub get
-      - run: cd app && flutter analyze
-      - run: flutter build apk --release --target-platform android-arm64
+      - name: Dependencies
+        working-directory: app
+        run: flutter pub get
+      - name: Analyze
+        working-directory: app
+        run: flutter analyze
+      - name: Build arm64 APK
+        working-directory: app
+        run: flutter build apk --release --flavor arm64 --target-platform android-arm64
       - uses: actions/upload-artifact@v4
         with:
           name: musleh-arm64-apk
