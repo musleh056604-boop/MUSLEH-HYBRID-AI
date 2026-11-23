@@ -22,8 +22,8 @@ jobs:
         run: flutter pub get
       - name: Build bundled arm64 runtime
         run: bash runtime/build-runtime.sh arm64-v8a
-      - name: Build arm64 APK without companion pack
-        run: bash tooling/build-apk.sh --build-name 1.0.0 --no-companion
+      - name: Build arm64 APK with trace
+        run: bash -x tooling/build-apk.sh --build-name 1.0.0 --no-companion
       - uses: actions/upload-artifact@v4
         with:
           name: musleh-arm64-runtime-apk
