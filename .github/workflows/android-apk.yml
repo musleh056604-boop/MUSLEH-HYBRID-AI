@@ -25,7 +25,8 @@ jobs:
       - name: Verify bundled runtime
         run: python3 tooling/check_runtime_bundle.py arm64
       - name: Skip optional tawcroot failure
-        run: sed -i 's/\[\[ \$mode == release \]\] && die "tawcroot: libtawcroot.so did not build"/echo "tawcroot unavailable; continuing"/g' tooling/build-apk.sh
+        run: |
+          sed -i 's/  \[\[ \$mode == release \]\] && die "tawcroot: libtawcroot.so did not build"/  echo "tawcroot unavailable; continuing"/' tooling/build-apk.sh
       - name: Build arm64 APK
         run: bash tooling/build-apk.sh --build-name 1.0.0 --no-companion
       - uses: actions/upload-artifact@v4
