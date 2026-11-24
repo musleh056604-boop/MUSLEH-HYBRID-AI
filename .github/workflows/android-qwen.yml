@@ -1,0 +1,37 @@
+name: Android Qwen ARM64 APK
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: musleh-v1-core
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.47.7'
+      - name: Build llama server ARM64
+        run: |
+          git clone --depth 1 https://github.com/ggml-org/llama.cpp src
+          NDK="${ANDROID_NDK_LATEST_HOME:-$(ls -d "$ANDROID_SDK_ROOT"/ndk/* | sort -V | tail -1)}"
+          cmake -S src -B build -DCMAKE_TOOLCHAIN_FILE="$NDK/build/cmake/android.toolchain.cmake" -DANDROID_ABI=arm64-v8a -DANDROID_PLATFORM=android-29 -DANDROID_STL=c++_static -DCMAKE_BUILD_TYPE=Release -DGGML_NATIVE=OFF -DGGML_OPENMP=OFF -DGGML_LLAMAFILE=OFF -DLLAMA_CURL=OFF -DBUILD_SHARED_LIBS=OFF -DCMAKE_C_FLAGS=-march=armv8-a -DCMAKE_CXX_FLAGS=-march=armv8-a
+          cmake --build build --target llama-server -j2
+          mkdir -p app/android/app/src/main/jniLibs/arm64-v8a
+          cp build/bin/llama-server app/android/app/src/main/jniLibs/arm64-v8a/libllama_server.so
+      - name: Flutter dependencies
+        working-directory: app
+        run: flutter pub get
+      - name: Build APK
+        run: bash tooling/build-apk.sh --build-name 1.0.0 --no-companion --side
+      - uses: actions/upload-artifact@v4
+        with:
+          name: musleh-arm64-qwen-apk
+          path: app/build/app/outputs/**/*.apk
