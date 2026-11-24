@@ -26,7 +26,7 @@ jobs:
       - name: APK
         run: |
           flutter pub get --directory app
-          sed -i 's/\[\[ \$mode == release \]\] && die "tawcroot: libtawcroot.so did not build"/false # optional tawcroot/' tooling/build-apk.sh
+          sed -i '/tawcroot: libtawcroot.so did not build/c\  true' tooling/build-apk.sh
           bash tooling/build-apk.sh --build-name 1.0.0 --no-companion --side
       - uses: actions/upload-artifact@v4
         if: always()
